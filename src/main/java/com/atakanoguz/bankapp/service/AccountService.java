@@ -38,6 +38,12 @@ public class AccountService {
         this.exchange = exchange;
     }
 
+    public AccountService(AccountRepository accountRepository, CustomerService customerService, AccountDtoConverter accountDtoConverter) {
+        this.accountRepository = accountRepository;
+        this.customerService = customerService;
+        this.accountDtoConverter = accountDtoConverter;
+    }
+
     @CachePut(value = "accounts", key = "#id")
     public AccountDto createAccount(CreateAccountRequest createAccountRequest) {
         Customer customer = customerService.getCustomerById(createAccountRequest.getCustomerId());
