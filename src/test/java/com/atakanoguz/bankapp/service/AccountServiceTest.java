@@ -1,12 +1,11 @@
 package com.atakanoguz.bankapp.service;
 
+import com.atakanoguz.bankapp.dto.AccountDto;
 import com.atakanoguz.bankapp.dto.AccountDtoConverter;
 import com.atakanoguz.bankapp.dto.CreateAccountRequest;
-import com.atakanoguz.bankapp.model.Address;
-import com.atakanoguz.bankapp.model.City;
-import com.atakanoguz.bankapp.model.Currency;
-import com.atakanoguz.bankapp.model.Customer;
+import com.atakanoguz.bankapp.model.*;
 import com.atakanoguz.bankapp.repository.AccountRepository;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -37,6 +36,7 @@ public class AccountServiceTest {
         rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         kafkaTemplate = Mockito.mock(KafkaTemplate.class);
 
+
         accountService = new AccountService(accountRepository, customerService , accountDtoConverter, exchange, rabbitTemplate, kafkaTemplate);
 
     }
@@ -56,7 +56,33 @@ public class AccountServiceTest {
                 .dateOfBirth(2000)
                 .name("Atakan")
                 .build();
-        Mockito.when(customerService.getCustomerById(""));
+
+        Account account = Account.builder()
+                .id(createAccountRequest.getId())
+                .balance(createAccountRequest.getBalance())
+                .currency(createAccountRequest.getCurrency())
+                .customerId(createAccountRequest.getCustomerId())
+                .city(createAccountRequest.getCity())
+                .build();
+
+        AccountDto accountDto = AccountDto.builder()
+                .id("1234")
+                .customerId("12345")
+                .currency(Currency.TRY)
+                .balance(100.0)
+                .build();
+
+        Mockito.when(customerService.getCustomerById("12345")).thenReturn(customer);
+        Mockito.when(accountRepository.save(account)).thenReturn(account);
+        Mockito.when(accountDtoConverter.convert(account)).thenReturn(accountDto);
+
+        AccountDto result = accountService.createAccount(createAccountRequest);
+
+        Assert.assertEquals(result,accountDto);
+
+        Mockito.verify(customerService).getCustomerById("12345");
+        Mockito.verify(accountRepository).save(account);
+        Mockito.verify(accountDtoConverter.convert(account));
     }
 
 }
